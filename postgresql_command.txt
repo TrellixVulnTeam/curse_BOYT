@@ -1,0 +1,240 @@
+Роли
+Create user enginer password 'iamenginer';
+Create user god createDB password 'jhy2b5sv89pthbn';
+Create user doctor password 'iamdoctor';
+create user administrator password 'admin';
+
+База данных
+create database MedicalService ;
+
+Схема
+CREATE SCHEMA IF NOT EXISTS medicalservice AUTHORIZATION god ;
+
+Таблицы
+
+create table cabinet
+(
+    id   serial
+        constraint cabinet_pk
+            primary key
+        constraint cabinet_erorrmessage_cabinetid_fk
+            references erorrmessage (cabinetid)
+        constraint cabinet_timetable_idcabinet_fk
+            references timetable (idcabinet),
+    name varchar(8) not null
+);
+
+alter table cabinet
+    owner to god;
+
+create unique index cabinet_id_uindex
+    on cabinet (id);
+
+create table erorrmessage
+(
+    id        serial
+        constraint erorrmessage_pk
+            primary key
+        constraint erorrmessage_servicemachine_errormessageid_fk
+            references servicemachine (errormessageid),
+    iddoctor  serial,
+    machineid serial,
+    cabinetid serial,
+    date      date not null
+);
+
+alter table erorrmessage
+    owner to god;
+
+create unique index erorrmessage_cabinetid_uindex
+    on erorrmessage (cabinetid);
+
+create unique index erorrmessage_id_uindex
+    on erorrmessage (id);
+
+create unique index erorrmessage_iddoctor_uindex
+    on erorrmessage (iddoctor);
+
+create unique index erorrmessage_machineid_uindex
+    on erorrmessage (machineid);
+
+create table machine
+(
+    id             serial
+        constraint machine_pk
+            primary key
+        constraint machine_erorrmessage_machineid_fk
+            references erorrmessage (machineid)
+        constraint "machine_machine\engineer_machineid_fk"
+            references "machine\engineer" (machineid)
+        constraint machine_servicemachine_machineid_fk
+            references servicemachine (machineid)
+        constraint machine_timetable_machineid_fk
+            references timetable (machineid),
+    type           text not null,
+    recommendation text not null,
+    lastservice    date,
+    futerservice   text not null,
+    "ToE"          date not null,
+    "EToE"         date not null
+);
+
+comment on column machine."ToE" is 'время входа в эксплуатацию';
+
+comment on column machine."EToE" is 'время выхода из эксплуатации';
+
+alter table machine
+    owner to god;
+
+create unique index machine_id_uindex
+    on machine (id);
+
+create table "machine\engineer"
+(
+    id         serial
+        constraint "machine\engineer_pk"
+            primary key,
+    machineid  serial,
+    engineerid serial
+);
+
+alter table "machine\engineer"
+    owner to god;
+
+create unique index "machine\engineer_engineerid_uindex"
+    on "machine\engineer" (engineerid);
+
+create unique index "machine\engineer_id_uindex"
+    on "machine\engineer" (id);
+
+create unique index "machine\engineer_machineid_uindex"
+    on "machine\engineer" (machineid);
+
+
+create table personal
+(
+    id         serial
+        constraint personal_pk
+            primary key
+        constraint personal_erorrmessage_iddoctor_fk
+            references erorrmessage (iddoctor)
+        constraint "personal_machine\engineer_engineerid_fk"
+            references "machine\engineer" (engineerid)
+        constraint personal_servicemachine_engineerid_fk
+            references servicemachine (engineerid)
+        constraint personal_timetable_idpersonal_fk
+            references timetable (idpersonal),
+    firstname  text not null,
+    secondname text not null,
+    thirdname  text,
+    positionid serial,
+    dob        date not null
+);
+
+alter table personal
+    owner to god;
+
+create unique index personal_id_uindex
+    on personal (id);
+
+create unique index personal_positionid_uindex
+    on personal (positionid);
+
+create table position
+(
+    id   serial
+        constraint position_pk
+            primary key
+        constraint position_personal_positionid_fk
+            references personal (positionid),
+    name text not null
+);
+
+alter table position
+    owner to god;
+
+create unique index position_id_uindex
+    on position (id);
+
+create table servicemachine
+(
+    id             serial
+        constraint servicemachine_pk
+            primary key,
+    engineerid     serial,
+    machineid      serial,
+    errormessageid serial,
+    status         text,
+    "DoS"          date not null,
+    "DoSE"         date
+);
+
+comment on column servicemachine."DoS" is 'дата начала обслуживания';
+
+comment on column servicemachine."DoSE" is 'дата конца обслуживания';
+
+alter table servicemachine
+    owner to god;
+
+create unique index servicemachine_engineerid_uindex
+    on servicemachine (engineerid);
+
+create unique index servicemachine_errormessageid_uindex
+    on servicemachine (errormessageid);
+
+create unique index servicemachine_id_uindex
+    on servicemachine (id);
+
+create unique index servicemachine_machineid_uindex
+    on servicemachine (machineid);
+
+
+create table timetable
+(
+    id         serial
+        constraint timetable_pk
+            primary key,
+    date       date not null,
+    machineid  serial,
+    idpersonal serial,
+    idcabinet  serial
+);
+
+alter table timetable
+    owner to god;
+
+create unique index timetable_idcabinet_uindex
+    on timetable (idcabinet);
+
+create unique index timetable_idpersonal_uindex
+    on timetable (idpersonal);
+
+create unique index timetable_machineid_uindex
+    on timetable (machineid);
+
+
+create table datelog
+(
+    id         serial
+        constraint datelog_pk
+            primary key,
+    login      varchar(20) not null,
+    password   varchar(50) not null,
+    idpersonal serial
+);
+
+alter table datelog
+    owner to god;
+
+create unique index datelog_id_uindex
+    on datelog (id);
+
+create unique index datelog_login_uindex
+    on datelog (login);
+
+create unique index datelog_password_uindex
+    on datelog (password);
+
+create unique index datelog_idpersonal_uindex
+    on datelog (idpersonal);
+
